@@ -279,12 +279,6 @@ function wp_cache_fetch_all() {
  * @return bool             Returns TRUE on success or FALSE on failure.
  */
 function wp_cache_flush( $delay = 0 ) {
-	$caller = array_shift( debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 1 ) );
-	if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
-		trigger_error( sprintf( 'wp_cache_flush() is only allowed via WP CLI. Called in %s line %d', $caller['file'], $caller['line'] ), E_USER_WARNING );
-		return false;
-	}
-	trigger_error( sprintf( 'wp_cache_flush() used, this is broadly not recommended. Called in %s line %d', $caller['file'], $caller['line'] ), E_USER_WARNING );
 	global $wp_object_cache;
 	return $wp_object_cache->flush( $delay );
 }
@@ -1527,6 +1521,11 @@ class WP_Object_Cache {
 		$data = $this->getMulti( $keys, 'options' );
 
 		if ( empty( $data ) ) {
+			return array();
+		}
+		
+		// For some reason $this->getMulti( $keys, 'options' ) might not return values for all keys
+		if ( count( $keys ) !== count( $data ) ) {
 			return array();
 		}
 
